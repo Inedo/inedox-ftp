@@ -56,7 +56,7 @@ namespace Inedo.BuildMasterExtensions.FTP
 
                 ftp.Passive = !this.ForceActiveMode;
 
-                ftp.BeginGet(this.ServerPath, this.FileMask, this.RemoteConfiguration.TargetDirectory, this.Recursive, this.SyncFiles, null);
+                ftp.BeginGet(this.ServerPath, this.FileMask, this.Context.TargetDirectory, this.Recursive, this.SyncFiles, null);
                 actualEvent.WaitOne();
             }
 

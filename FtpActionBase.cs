@@ -2,7 +2,6 @@
 using Dart.PowerTCP.Ftp;
 using Inedo.BuildMaster;
 using Inedo.BuildMaster.Extensibility.Actions;
-using System.Text.RegularExpressions;
 
 namespace Inedo.BuildMasterExtensions.FTP
 {
