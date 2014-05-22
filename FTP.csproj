@@ -42,9 +42,11 @@
   <ItemGroup>
     <Reference Include="BuildMaster.Web.Controls">
       <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\BuildMaster.Web.Controls.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="BuildMasterCore">
       <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\BuildMasterCore.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Dart.PowerTCP.Ftp, Version=3.0.2.0, Culture=neutral, PublicKeyToken=5966291b8955e4bb">
       <SpecificVersion>False</SpecificVersion>
@@ -56,6 +58,7 @@
     </Reference>
     <Reference Include="InedoLib">
       <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\InedoLib.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Web" />
