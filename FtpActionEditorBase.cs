@@ -1,9 +1,8 @@
-﻿using System.Web;
-using System.Web.UI.WebControls;
+﻿using System.Web.UI.WebControls;
 using Inedo.BuildMaster.Extensibility.Actions;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.BuildMaster.Web.Controls.Extensions;
 using Inedo.Web.Controls;
+using Inedo.Web.Controls.SimpleHtml;
 
 namespace Inedo.BuildMasterExtensions.FTP
 {
@@ -15,13 +14,14 @@ namespace Inedo.BuildMasterExtensions.FTP
         where TAction : FtpActionBase
     {
         private ValidatingTextBox txtServer;
-        private TextBox txtUserName;
+        private ValidatingTextBox txtUserName;
         private PasswordTextBox txtPassword;
-        private TextBox txtServerPath;
+        private ValidatingTextBox txtServerPath;
         private ValidatingTextBox txtFileMask;
         private CheckBox chkRecursive;
         private CheckBox chkLogIndividualFiles;
         private CheckBox chkForceActiveMode;
+        private CheckBox chkBinaryMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FtpActionEditorBase&lt;TAction&gt;"/> class.
@@ -29,6 +29,8 @@ namespace Inedo.BuildMasterExtensions.FTP
         protected FtpActionEditorBase()
         {
         }
+
+        public abstract override string ServerLabel { get; }
 
         /// <summary>
         /// Gets the server path description.
@@ -44,14 +46,15 @@ namespace Inedo.BuildMasterExtensions.FTP
             EnsureChildControls();
 
             var action = (TAction)extension;
-            this.txtServer.Text = action.FtpServer ?? "";
-            this.txtServerPath.Text = action.ServerPath ?? "";
-            this.txtUserName.Text = action.UserName ?? "";
-            this.txtPassword.Text = action.Password ?? "";
-            this.txtFileMask.Text = action.FileMask ?? "";
+            this.txtServer.Text = action.FtpServer;
+            this.txtServerPath.Text = action.ServerPath;
+            this.txtUserName.Text = action.UserName;
+            this.txtPassword.Text = action.Password;
+            this.txtFileMask.Text = action.FileMask;
             this.chkRecursive.Checked = action.Recursive;
             this.chkLogIndividualFiles.Checked = action.LogIndividualFiles;
             this.chkForceActiveMode.Checked = action.ForceActiveMode;
+            this.chkBinaryMode.Checked = action.BinaryMode;
 
             BindActionToForm(action);
         }
@@ -64,10 +67,11 @@ namespace Inedo.BuildMasterExtensions.FTP
             action.ServerPath = this.txtServerPath.Text;
             action.UserName = this.txtUserName.Text;
             action.Password = this.txtPassword.Text;
-            action.FileMask = this.txtFileMask.Text;
+            action.FileMask = string.IsNullOrEmpty(this.txtFileMask.Text) ? "*" : this.txtFileMask.Text;
             action.Recursive = this.chkRecursive.Checked;
             action.LogIndividualFiles = this.chkLogIndividualFiles.Checked;
             action.ForceActiveMode = this.chkForceActiveMode.Checked;
+            action.BinaryMode = this.chkBinaryMode.Checked;
 
             return action;
         }
@@ -90,101 +94,39 @@ namespace Inedo.BuildMasterExtensions.FTP
         {
             base.CreateChildControls();
 
-            this.txtServer = new ValidatingTextBox
-            {
-                Width = 300,
-                Required = true
-            };
+            this.txtServer = new ValidatingTextBox { Required = true };
+            this.txtUserName = new ValidatingTextBox { DefaultText = "anonymous" };
+            this.txtPassword = new PasswordTextBox();
+            this.txtServerPath = new ValidatingTextBox();
+            this.txtFileMask = new ValidatingTextBox { DefaultText = "*" };
+            this.chkRecursive = new CheckBox { Text = "Recursive" };
+            this.chkLogIndividualFiles = new CheckBox { Text = "Log individual file transfers" };
+            this.chkForceActiveMode = new CheckBox { Text = "Force Active FTP connection" };
+            this.chkBinaryMode = new CheckBox { Text = "Use Binary Mode for file transmission" };
 
-            this.txtUserName = new TextBox
-            {
-                Width = 300
-            };
-
-            this.txtPassword = new PasswordTextBox
-            {
-                Width = 250
-            };
-
-            this.txtServerPath = new TextBox
-            {
-                Width = 300
-            };
-
-            this.txtFileMask = new ValidatingTextBox
-            {
-                Width = 300,
-                Required = true
-            };
-
-            this.chkRecursive = new CheckBox
-            {
-                Text = "Recursive"
-            };
-
-            this.chkLogIndividualFiles = new CheckBox
-            {
-                Text = "Log Individual Files"
-            };
-
-            this.chkForceActiveMode = new CheckBox()
-            {
-                Text = "Force Active FTP Connection"
-            };
-
-            CUtil.Add(this,
-                new RenderJQueryDocReadyDelegator(w => w.WriteLine("$('#" + this.txtUserName.ClientID + "').inedobm_defaulter({defaultText:'anonymous'});")),
-                new FormFieldGroup(
-                    "FTP Server",
-                    "Provide the FTP server to connect to and log on information if it is required.",
-                    false,
-                    new StandardFormField(
-                        "Server Name/Address:",
-                        this.txtServer
-                    ),
-                    new StandardFormField(
-                        "User Name:",
-                        this.txtUserName
-                    ),
-                    new StandardFormField(
-                        "Password:",
-                        this.txtPassword
-                    )
-                ),
-                new FormFieldGroup(
-                    "Server Root Path",
-                    HttpUtility.HtmlEncode(this.ServerPathDescription),
-                    false,
-                    new StandardFormField(
-                        "Server Path:",
-                        this.txtServerPath
-                    )
-                ),
-                new FormFieldGroup(
-                    "Files",
-                    HttpUtility.HtmlEncode(this.FileMaskDescription),
-                    false,
-                    new StandardFormField(
-                        "Files:",
-                        this.txtFileMask
-                    )
-                ),
-                new FormFieldGroup(
-                    "Options",
-                    "Provide additional configuration settings for the FTP operation.",
-                    false,
-                    new StandardFormField(
-                        "",
-                        this.chkRecursive
-                    ),
-                    new StandardFormField(
-                        "",
-                        this.chkLogIndividualFiles
-                    ),
-                    new StandardFormField(
-                        "",
-                        this.chkForceActiveMode
-                    )
+            this.Controls.Add(
+                new SlimFormField("FTP server host:", this.txtServer),
+                new SlimFormField("User name:", this.txtUserName),
+                new SlimFormField("Password:", this.txtPassword),
+                new SlimFormField("FTP server root path:", this.txtServerPath)
+                {
+                    HelpText = this.ServerPathDescription
+                },
+                new SlimFormField("File mask:", this.txtFileMask)
+                {
+                    HelpText = this.FileMaskDescription
+                },
+                new SlimFormField("File transmission mode:", this.chkBinaryMode)
+                {
+                    HelpText = "If checked, any files transferred will use Binary Mode (i.e. byte-for-byte); "
+                    + "otherwise any transferred files will be transferred in ASCII Mode and line endings will be converted "
+                    + "if the source and target platforms are different."
+                },
+                new SlimFormField(
+                    "Additional options:",
+                    new Div(this.chkRecursive),
+                    new Div(this.chkLogIndividualFiles),
+                    new Div(this.chkForceActiveMode)
                 )
             );
         }

@@ -1,5 +1,5 @@
 ﻿using System.Web.UI.WebControls;
-using Inedo.BuildMaster.Web.Controls;
+using Inedo.Web.Controls;
 
 namespace Inedo.BuildMasterExtensions.FTP
 {
@@ -32,6 +32,8 @@ namespace Inedo.BuildMasterExtensions.FTP
             get { return "The files to delete on the server; may include a path and wildcards."; }
         }
 
+        public override string ServerLabel { get { return "Run on server:"; } }
+
         /// <summary>
         /// Binds the action to the form.
         /// </summary>
@@ -59,21 +61,10 @@ namespace Inedo.BuildMasterExtensions.FTP
         {
             base.CreateChildControls();
 
-            this.chkRemoveEmpty = new CheckBox
-            {
-                Text = "Remove Empty Directories"
-            };
+            this.chkRemoveEmpty = new CheckBox { Text = "Remove empty directories" };
 
-            CUtil.Add(this,
-                new FormFieldGroup(
-                    "Remove Empty Directories",
-                    "If checked, empty directories will automatically be removed.",
-                    true,
-                    new StandardFormField(
-                        "",
-                        this.chkRemoveEmpty
-                    )
-                )
+            this.Controls.Add(
+                new SlimFormField("Directory handling:", this.chkRemoveEmpty)
             );
         }
     }

@@ -1,5 +1,5 @@
 ﻿using System.Web.UI.WebControls;
-using Inedo.BuildMaster.Web.Controls;
+using Inedo.Web.Controls;
 
 namespace Inedo.BuildMasterExtensions.FTP
 {
@@ -25,6 +25,8 @@ namespace Inedo.BuildMasterExtensions.FTP
         /// </value>
         public override bool DisplaySourceDirectory { get { return true; } }
 
+        public override string SourceDirectoryLabel { get { return "From directory:"; } }
+
         /// <summary>
         /// Gets the server path description.
         /// </summary>
@@ -39,6 +41,8 @@ namespace Inedo.BuildMasterExtensions.FTP
         {
             get { return "The files to send to the server; may include a path and wildcards."; }
         }
+
+        public override string ServerLabel { get { return "From server:"; } }
 
         /// <summary>
         /// Binds the action to the form.
@@ -67,21 +71,10 @@ namespace Inedo.BuildMasterExtensions.FTP
         {
             base.CreateChildControls();
 
-            this.chkSyncFiles = new CheckBox
-            {
-                Text = "Synchronize Files"
-            };
+            this.chkSyncFiles = new CheckBox { Text = "Only transfer files with newer timestamp" };
 
-            CUtil.Add(this,
-                new FormFieldGroup(
-                    "Synchronize Files",
-                    "If checked, only files with a newer timestamp will be transferred.",
-                    true,
-                    new StandardFormField(
-                        "",
-                        this.chkSyncFiles
-                    )
-                )
+            this.Controls.Add(
+                new SlimFormField("File synchronization:", this.chkSyncFiles)
             );
         }
     }

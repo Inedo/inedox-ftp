@@ -74,6 +74,12 @@ namespace Inedo.BuildMasterExtensions.FTP
         public bool ForceActiveMode { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether FTP actions should use Binary mode as opposed to ASCII.
+        /// </summary>
+        [Persistent]
+        public bool BinaryMode { get; set; }
+
+        /// <summary>
         /// Gets the server name with the path appended.
         /// </summary>
         protected string ServerNameAndPath
@@ -111,10 +117,19 @@ namespace Inedo.BuildMasterExtensions.FTP
                     throw new InvalidOperationException("Invalid port in FTP server name.");
             }
 
+            this.LogDebug(
+                "Connecting to FTP server at {0} in {1} mode as user \"{2}\"...",
+                this.FtpServer,
+                this.BinaryMode ? "Binary" : "ASCII",
+                Util.CoalesceStr(this.UserName, "anonymous")
+            );
+
             return new Ftp
             {
+                Timeout = this.Timeout == 0 ? 30000 : this.Timeout * 1000,
                 Server = ftpServer,
                 ServerPort = port,
+                FileType = this.BinaryMode ? FileType.Image : FileType.Ascii,
                 Username = Util.CoalesceStr(this.UserName, "anonymous"),
                 Password = string.Equals(this.UserName, "anonymous", StringComparison.OrdinalIgnoreCase) ? "anonymous@" : this.Password
             };

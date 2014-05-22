@@ -10,9 +10,10 @@ namespace Inedo.BuildMasterExtensions.FTP
     /// </summary>
     [ActionProperties(
         "Send Files",
-        "Sends files to an FTP server.",
-        "FTP")]
+        "Sends files to an FTP server.")]
     [CustomEditor(typeof(PutActionEditor))]
+    [Tag("FTP")]
+    [Tag(Tags.Files)]
     public sealed class PutAction : FtpActionBase
     {
         /// <summary>
@@ -34,22 +35,22 @@ namespace Inedo.BuildMasterExtensions.FTP
         }
         protected override string ProcessRemoteCommand(string name, string[] args)
         {
-            LogInformation("Sending files to " + this.FtpServer + " using FTP...");
+            this.LogInformation("Sending files to {0} using FTP...", this.FtpServer);
 
             using (var ftp = CreateClient())
             using (var actualEvent = new ManualResetEvent(false))
             {
                 if (this.LogIndividualFiles)
-                    ftp.Preview += (s, e) => LogInformation("Sending " + e.FileName);
+                    ftp.Preview += (s, e) => this.LogInformation("Sending {0}...", e.FileName);
 
                 ftp.EndPut += (s, e) =>
                 {
                     if (e.Exception != null)
-                        LogError(e.Exception.Message);
+                        this.LogError(e.Exception.Message);
                     else if (e.Files != null && e.Files.Length > 0)
-                        LogInformation(string.Format("{0} file(s) sent.", e.Files.Length));
+                        this.LogInformation("{0} file(s) sent.", e.Files.Length);
                     else
-                        LogInformation("No files to transfer.");
+                        this.LogInformation("No files to transfer.");
 
                     actualEvent.Set();
                 };
@@ -62,19 +63,22 @@ namespace Inedo.BuildMasterExtensions.FTP
 
             return string.Empty;
         }
+
         /// <summary>
-        /// Returns a <see cref="System.String"/> that represents this instance.
+        /// Returns a description of the current configuration of the action.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String"/> that represents this instance.
+        /// Description of the action's current configuration.
         /// </returns>
-        public override string ToString()
+        public override ActionDescription GetActionDescription()
         {
-            return string.Format(
-                "Send files matching {0} from {1} to FTP server at {2}",
-                this.FileMask,
-                Util.CoalesceStr(this.OverriddenSourceDirectory, "(default directory)"),
-                this.ServerNameAndPath
+            return new ActionDescription(
+                new ShortActionDescription("FTP PUT Files"),
+                new LongActionDescription(
+                    "matching ", new Hilite(this.FileMask),
+                    " from ",  new DirectoryHilite(this.OverriddenTargetDirectory),
+                    " to ", new Hilite(this.ServerNameAndPath)
+                )
             );
         }
     }

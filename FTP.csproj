@@ -41,12 +41,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BuildMaster.Web.Controls">
-      <HintPath>packages\Inedo.BuildMaster.SDK.4.0\lib\net40\BuildMaster.Web.Controls.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\BuildMaster.Web.Controls.dll</HintPath>
     </Reference>
     <Reference Include="BuildMasterCore">
-      <HintPath>packages\Inedo.BuildMaster.SDK.4.0\lib\net40\BuildMasterCore.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\BuildMasterCore.dll</HintPath>
     </Reference>
     <Reference Include="Dart.PowerTCP.Ftp, Version=3.0.2.0, Culture=neutral, PublicKeyToken=5966291b8955e4bb">
       <SpecificVersion>False</SpecificVersion>
@@ -57,8 +55,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="InedoLib">
-      <HintPath>packages\Inedo.BuildMaster.SDK.4.0\lib\net40\InedoLib.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>packages\Inedo.BuildMaster.SDK.4.2\lib\net40\InedoLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Web" />
@@ -87,8 +84,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>if exist $(SolutionDir) cmd /c "del $(SolutionDir)..\..\BuildMaster-4.2\ExtensionLib\$(TargetName).bmx"
+
+if exist $(SolutionDir) $(SolutionDir)..\zip -r $(SolutionDir)..\..\BuildMaster-4.2\ExtensionLib\$(TargetName).bmx *.*</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
