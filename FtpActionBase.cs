@@ -80,6 +80,12 @@ namespace Inedo.BuildMasterExtensions.FTP
         public bool BinaryMode { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to send a NAMEFMT=1 command.
+        /// </summary>
+        [Persistent]
+        public bool AS400Compatibility { get; set; }
+
+        /// <summary>
         /// Gets the server name with the path appended.
         /// </summary>
         protected string ServerNameAndPath
@@ -124,7 +130,7 @@ namespace Inedo.BuildMasterExtensions.FTP
                 Util.CoalesceStr(this.UserName, "anonymous")
             );
 
-            return new Ftp
+            var ftp = new Ftp
             {
                 Timeout = this.Timeout == 0 ? 30000 : this.Timeout * 1000,
                 Server = ftpServer,
@@ -133,6 +139,15 @@ namespace Inedo.BuildMasterExtensions.FTP
                 Username = Util.CoalesceStr(this.UserName, "anonymous"),
                 Password = string.Equals(this.UserName, "anonymous", StringComparison.OrdinalIgnoreCase) ? "anonymous@" : this.Password
             };
+
+            if (this.AS400Compatibility)
+            {
+                this.LogDebug("Sending QUOTE SITE NAMEFMT 1...");
+                var response = ftp.SendCommand("QUOTE SITE NAMEFMT 1");
+                this.LogDebug("Responded with: " + response);
+            }
+
+            return ftp;
         }
     }
 }
