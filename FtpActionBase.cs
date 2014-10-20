@@ -142,8 +142,8 @@ namespace Inedo.BuildMasterExtensions.FTP
 
             if (this.AS400Compatibility)
             {
-                this.LogDebug("Sending QUOTE SITE NAMEFMT 1...");
-                var response = ftp.SendCommand("QUOTE SITE NAMEFMT 1");
+                this.LogDebug("Sending SITE NAMEFMT 1...");
+                var response = ftp.SendCommand("SITE NAMEFMT 1");
                 this.LogDebug("Responded with: " + response);
             }
 
