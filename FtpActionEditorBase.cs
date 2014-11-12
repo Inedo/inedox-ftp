@@ -1,4 +1,5 @@
-﻿using System.Web.UI.WebControls;
+﻿using System;
+using System.Web.UI.WebControls;
 using Inedo.BuildMaster.Extensibility.Actions;
 using Inedo.BuildMaster.Web.Controls.Extensions;
 using Inedo.Web.Controls;
@@ -22,7 +23,7 @@ namespace Inedo.BuildMasterExtensions.FTP
         private CheckBox chkLogIndividualFiles;
         private CheckBox chkForceActiveMode;
         private CheckBox chkBinaryMode;
-        private CheckBox chkiSeriesMode;
+        private ValidatingTextBox txtInitializationCommands;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FtpActionEditorBase&lt;TAction&gt;"/> class.
@@ -54,7 +55,7 @@ namespace Inedo.BuildMasterExtensions.FTP
             this.chkLogIndividualFiles.Checked = action.LogIndividualFiles;
             this.chkForceActiveMode.Checked = action.ForceActiveMode;
             this.chkBinaryMode.Checked = action.BinaryMode;
-            this.chkiSeriesMode.Checked = action.AS400Compatibility;
+            this.txtInitializationCommands.Text = string.Join(Environment.NewLine, action.InitializationCommands ?? new string[0]);
 
             this.BindActionToForm(action);
         }
@@ -70,7 +71,7 @@ namespace Inedo.BuildMasterExtensions.FTP
             action.LogIndividualFiles = this.chkLogIndividualFiles.Checked;
             action.ForceActiveMode = this.chkForceActiveMode.Checked;
             action.BinaryMode = this.chkBinaryMode.Checked;
-            action.AS400Compatibility = this.chkiSeriesMode.Checked;
+            action.InitializationCommands = this.txtInitializationCommands.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
             return action;
         }
@@ -102,7 +103,7 @@ namespace Inedo.BuildMasterExtensions.FTP
             this.chkLogIndividualFiles = new CheckBox { Text = "Log individual file transfers" };
             this.chkForceActiveMode = new CheckBox { Text = "Force Active FTP connection" };
             this.chkBinaryMode = new CheckBox { Text = "Use Binary Mode for file transmission" };
-            this.chkiSeriesMode = new CheckBox { Text = "Enable iSeries server compatibility" };
+            this.txtInitializationCommands = new ValidatingTextBox { Required = false, Rows = 5, TextMode = TextBoxMode.MultiLine };
 
             this.Controls.Add(
                 new SlimFormField("FTP server host:", this.txtServer),
@@ -126,9 +127,13 @@ namespace Inedo.BuildMasterExtensions.FTP
                     "Additional options:",
                     new Div(this.chkRecursive),
                     new Div(this.chkLogIndividualFiles),
-                    new Div(this.chkForceActiveMode),
-                    new Div(this.chkiSeriesMode)
-                )
+                    new Div(this.chkForceActiveMode)
+                ),
+                new SlimFormField("Initialization commands:", this.txtInitializationCommands)
+                {
+                    HelpText = "These FTP commands, separated by newlines, will be executed on the FTP server before this action is executed. "
+                     + "In most cases, this field should be left empty."
+                }
             );
         }
     }

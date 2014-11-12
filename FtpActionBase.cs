@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Dart.PowerTCP.Ftp;
 using Inedo.BuildMaster;
+using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Actions;
 
 namespace Inedo.BuildMasterExtensions.FTP
@@ -8,7 +11,7 @@ namespace Inedo.BuildMasterExtensions.FTP
     /// <summary>
     /// Provides common functionality for FTP actions.
     /// </summary>
-    public abstract class FtpActionBase : RemoteActionBase
+    public abstract class FtpActionBase : RemoteActionBase, IMissingPersistentPropertyHandler
     {
         private string serverPath = "/";
 
@@ -80,10 +83,10 @@ namespace Inedo.BuildMasterExtensions.FTP
         public bool BinaryMode { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to send a NAMEFMT=1 command.
+        /// Gets or sets a series of commands to run on the server before any actions are run.
         /// </summary>
         [Persistent]
-        public bool AS400Compatibility { get; set; }
+        public string[] InitializationCommands { get; set; }
 
         /// <summary>
         /// Gets the server name with the path appended.
@@ -140,14 +143,28 @@ namespace Inedo.BuildMasterExtensions.FTP
                 Password = string.Equals(this.UserName, "anonymous", StringComparison.OrdinalIgnoreCase) ? "anonymous@" : this.Password
             };
 
-            if (this.AS400Compatibility)
+            if (this.InitializationCommands != null)
             {
-                this.LogDebug("Sending SITE NAMEFMT 1...");
-                var response = ftp.SendCommand("SITE NAMEFMT 1");
-                this.LogDebug("Responded with: " + response);
+                foreach (string command in this.InitializationCommands)
+                {
+                    this.LogDebug("Sending initialization command {0}...", command);
+                    var response = ftp.SendCommand(command);
+                    this.LogDebug("Responded with: " + response);
+                }
             }
 
             return ftp;
+        }
+
+        void IMissingPersistentPropertyHandler.OnDeserializedMissingProperties(IDictionary<string, string> missingProperties)
+        {
+            string value = missingProperties["AS400Compatibility"];
+
+            if (value == null)
+                return;
+
+            if (bool.Parse(value))
+                this.InitializationCommands = new[] { "SITE NAMEFMT 1" }.Concat(this.InitializationCommands ?? Enumerable.Empty<string>()).ToArray();
         }
     }
 }
