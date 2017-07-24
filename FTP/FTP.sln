@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "Common\Common.shproj", "{E5853171-A543-497F-B373-CAB523AD8FED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtterExtension", "OtterExtension\OtterExtension.csproj", "{058201C2-C13E-4F46-B311-61CFFF22CE83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildMasterExtension", "BuildMasterExtension\BuildMasterExtension.csproj", "{6334832E-3F7B-4151-A5AC-9534F4A571BA}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Common\Common.projitems*{058201c2-c13e-4f46-b311-61cfff22ce83}*SharedItemsImports = 4
+		Common\Common.projitems*{6334832e-3f7b-4151-a5ac-9534f4a571ba}*SharedItemsImports = 4
+		Common\Common.projitems*{e5853171-a543-497f-b373-cab523ad8fed}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{058201C2-C13E-4F46-B311-61CFFF22CE83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{058201C2-C13E-4F46-B311-61CFFF22CE83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{058201C2-C13E-4F46-B311-61CFFF22CE83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{058201C2-C13E-4F46-B311-61CFFF22CE83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6334832E-3F7B-4151-A5AC-9534F4A571BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6334832E-3F7B-4151-A5AC-9534F4A571BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6334832E-3F7B-4151-A5AC-9534F4A571BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6334832E-3F7B-4151-A5AC-9534F4A571BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
