@@ -1,16 +1,10 @@
 ﻿using System.ComponentModel;
 using System.Security;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Web;
-#elif Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensions;
-#endif
+using Inedo.Web;
 
 namespace Inedo.Extensions.FTP.Credentials
 {

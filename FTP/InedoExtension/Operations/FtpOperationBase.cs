@@ -5,18 +5,11 @@ using System.Net;
 using System.Security;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.FTP.Credentials;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web;
-#elif Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensibility.Operations;
-using Inedo.Otter.Extensions;
-#endif
+using Inedo.Web;
 
 namespace Inedo.Extensions.FTP.Operations
 {
@@ -82,15 +75,14 @@ namespace Inedo.Extensions.FTP.Operations
         }
 
         [ScriptAlias("Include")]
-        [Description(CommonDescriptions.MaskingHelp)]
+        [MaskingDescription]
         public IEnumerable<string> Includes { get; set; }
 
         [ScriptAlias("Exclude")]
-        [Description(CommonDescriptions.MaskingHelp)]
+        [MaskingDescription]
         public IEnumerable<string> Excludes { get; set; }
 
-        [DisplayName("Verbose")]
-        [Description(CommonDescriptions.VerboseLogging)]
+        [DisplayName("Verbose logging")]
         [ScriptAlias("Verbose")]
         [Category("Advanced")]
         public bool VerboseLogging { get; set; }
