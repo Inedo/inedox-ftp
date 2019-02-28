@@ -1,6 +1,6 @@
 # inedox-ftp
 
-[![Build status](https://ci.appveyor.com/api/projects/status/h0a9lgvlw3e3mlle/branch/master?svg=true)](https://ci.appveyor.com/project/Inedo/inedox-ftp/branch/master)
+[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=20)](https://buildmaster.inedo.com/api/ci-badges/link?API_Key=badges&$ApplicationId=20)
 
 Contains actions for communicating with a server using FTP.
 
