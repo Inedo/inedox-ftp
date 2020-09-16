@@ -75,7 +75,15 @@ namespace Inedo.Extensions.FTP
             // 04-14-00  03:47PM                  589 readme.htm
             var parts = line.Split(new[] { ' ' }, 4, StringSplitOptions.RemoveEmptyEntries);
             var path = Path.Combine(basePath, parts[3]);
-            var lastWriteTime = DateTime.Parse(parts[0] + " " + parts[1]);
+            DateTime lastWriteTime;
+            try
+            {
+                lastWriteTime = DateTime.Parse(parts[0] + " " + parts[1]);
+            }
+            catch(FormatException ex)
+            {
+                throw new FormatException($"String was not recognized as a valid DateTime. Parsed \"{parts[0]} {parts[1]}\" from line \"{line}\" for the date.", ex);
+            }
 
             if (string.Equals(parts[2], "<DIR>", StringComparison.OrdinalIgnoreCase))
             {
