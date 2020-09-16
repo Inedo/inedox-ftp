@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Inedo.Extensibility;
 
 [assembly: AssemblyTitle("FTP")]
 [assembly: AssemblyDescription("Contains actions for communicating with a server using FTP.")]
@@ -10,3 +11,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0")]
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
+
+[assembly: AppliesTo(InedoProduct.BuildMaster | InedoProduct.Otter)]
