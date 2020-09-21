@@ -48,7 +48,7 @@ namespace Inedo.Extensions.FTP.Operations
             if (this.OnlyNewer)
             {
                 this.LogDebug("Retrieving file listing...");
-                var files = await this.CreateRequest(this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(path), context.CancellationToken).ConfigureAwait(false);
+                var files = await this.CreateRequest(this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(path), this.UseCurrentDateOnDateParseError, context.CancellationToken).ConfigureAwait(false);
 
                 var remoteMatches = files.Where(f => mask.IsMatch(f.FullName.Substring(this.ServerPath.Length).Trim('\\', '/'))).ToList();
                 foreach (var file in remoteMatches.OfType<SlimFileInfo>())

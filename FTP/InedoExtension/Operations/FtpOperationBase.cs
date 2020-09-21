@@ -99,6 +99,12 @@ namespace Inedo.Extensions.FTP.Operations
         [Category("Advanced")]
         public DataTransferMode TransferMode { get; set; } = DataTransferMode.Binary;
 
+        [Category("Advanced")]
+        [DisplayName("Use current date on error")]
+        [Description("Set the file modified date and time as the current date and time if it cannot be parsed from the FTP server.")]
+        [ScriptAlias("UseCurrentDateOnDateParseError")]
+        public bool UseCurrentDateOnDateParseError { get; set; } = false;
+
         /// <summary>
         /// Creates an FTP client to connect to the remote server.
         /// </summary>
