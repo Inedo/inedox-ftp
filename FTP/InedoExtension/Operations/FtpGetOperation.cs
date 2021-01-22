@@ -136,11 +136,11 @@ namespace Inedo.Extensions.FTP.Operations
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
-            var credential = string.IsNullOrEmpty(config[nameof(CredentialName)]) ? null : ResourceCredentials.Create<FtpLegacyCredentials>(config[nameof(CredentialName)]);
-            var hostName = config[nameof(HostName)].ToString() ?? credential?.HostName;
+            var hostname = config[nameof(HostName)].ToString();
+            hostname = string.IsNullOrWhiteSpace(hostname) ? config[nameof(ResourceName)] : hostname;
             return new ExtendedRichDescription(
                 new RichDescription("Download ", new MaskHilite(config[nameof(Includes)], config[nameof(Excludes)])),
-                new RichDescription("from ", new Hilite(hostName))
+                new RichDescription("from ", new Hilite(hostname))
             );
         }
     }
