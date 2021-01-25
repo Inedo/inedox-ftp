@@ -22,9 +22,6 @@ namespace Inedo.Extensions.FTP.Operations
     [ScriptAlias("Get-Files")]
     public sealed class FtpGetOperation : FtpTransferOperationBase
     {
-        [DisplayName("Credentials")]
-        [ScriptAlias("Credentials")]
-        public override string CredentialName { get; set; }
 
         private long progressTotal = 0;
         private long progressNow = 0;
@@ -40,7 +37,8 @@ namespace Inedo.Extensions.FTP.Operations
             var basePath = context.ResolvePath(this.LocalPath);
 
             this.LogDebug("Retrieving remote file listing...");
-            var files = await this.CreateRequest(this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(path), this.UseCurrentDateOnDateParseError, context.CancellationToken).ConfigureAwait(false);
+            var (credentials, resource) = this.GetCredentialsAndResource(context as ICredentialResolutionContext);
+            var files = await this.CreateRequest(credentials, resource, this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(credentials, resource, path), this.UseCurrentDateOnDateParseError, context.CancellationToken).ConfigureAwait(false);
 
             var mask = new MaskingContext(this.Includes, this.Excludes);
             var matches = files.Where(f => mask.IsMatch(f.FullName.Substring(this.ServerPath.Length).Trim('\\', '/'))).ToList();
@@ -81,74 +79,68 @@ namespace Inedo.Extensions.FTP.Operations
                 progressTotal += 100 + file.Size;
             }
 
-            using (var sem = new SemaphoreSlim(10, 10))
+            using var sem = new SemaphoreSlim(10, 10);
+            var tasks = new List<Task>();
+
+            foreach (var f in toTransfer)
             {
-                var tasks = new List<Task>();
+                // copy variable to inside of block
+                var file = f;
 
-                foreach (var f in toTransfer)
+                await sem.WaitAsync().ConfigureAwait(false);
+                tasks.Add(Task.Run(async () =>
                 {
-                    // copy variable to inside of block
-                    var file = f;
-
-                    await sem.WaitAsync().ConfigureAwait(false);
-                    tasks.Add(Task.Run(async () =>
+                    try
                     {
+                        var path = file.FullName.Substring(this.ServerPath.Length).Trim('\\', '/').Replace('\\', '/');
+
+                        var req = this.CreateRequest(credentials, resource, file.FullName);
+                        req.Method = WebRequestMethods.Ftp.DownloadFile;
                         try
                         {
-                            var path = file.FullName.Substring(this.ServerPath.Length).Trim('\\', '/').Replace('\\', '/');
+                            using var response = await req.GetResponseAsync(context.CancellationToken).ConfigureAwait(false);
+                            using var responseStream = response.GetResponseStream();
+                            using var fileStream = await fileOps.OpenFileAsync(fileOps.CombinePath(basePath, path), FileMode.Create, FileAccess.Write).ConfigureAwait(false);
+                            Interlocked.Add(ref this.progressNow, 100);
 
-                            var req = this.CreateRequest(file.FullName);
-                            req.Method = WebRequestMethods.Ftp.DownloadFile;
-                            try
+                            long lastProgress = 0;
+                            await responseStream.CopyToAsync(fileStream, 8192, context.CancellationToken, p =>
                             {
-                                using (var response = await req.GetResponseAsync(context.CancellationToken).ConfigureAwait(false))
-                                {
-                                    using (var responseStream = response.GetResponseStream())
-                                    using (var fileStream = await fileOps.OpenFileAsync(fileOps.CombinePath(basePath, path), FileMode.Create, FileAccess.Write).ConfigureAwait(false))
-                                    {
-                                        Interlocked.Add(ref this.progressNow, 100);
+                                Interlocked.Add(ref this.progressNow, p - lastProgress);
+                                lastProgress = p;
+                            }).ConfigureAwait(false);
 
-                                        long lastProgress = 0;
-                                        await responseStream.CopyToAsync(fileStream, 8192, context.CancellationToken, p =>
-                                        {
-                                            Interlocked.Add(ref this.progressNow, p - lastProgress);
-                                            lastProgress = p;
-                                        }).ConfigureAwait(false);
-
-                                        Interlocked.Add(ref this.progressNow, file.Size - lastProgress);
-                                    }
-                                }
-                            }
-                            catch (WebException ex)
-                            {
-                                if (ex.Status == WebExceptionStatus.ProtocolError)
-                                {
-                                    this.LogError($"Retrieving {path} failed: server returned {(ex.Response as FtpWebResponse)?.StatusDescription}");
-                                }
-                                else
-                                {
-                                    this.LogError($"Retrieving {path} failed: {ex}");
-                                }
-                            }
+                            Interlocked.Add(ref this.progressNow, file.Size - lastProgress);
                         }
-                        finally
+                        catch (WebException ex)
                         {
-                            sem.Release();
+                            if (ex.Status == WebExceptionStatus.ProtocolError)
+                            {
+                                this.LogError($"Retrieving {path} failed: server returned {(ex.Response as FtpWebResponse)?.StatusDescription}");
+                            }
+                            else
+                            {
+                                this.LogError($"Retrieving {path} failed: {ex}");
+                            }
                         }
-                    }));
-                }
-
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        sem.Release();
+                    }
+                }));
             }
+
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
-            var credential = string.IsNullOrEmpty(config[nameof(CredentialName)]) ? null : ResourceCredentials.Create<FtpCredentials>(config[nameof(CredentialName)]);
-            var hostName = config[nameof(HostName)].ToString() ?? credential?.HostName;
+            var hostname = config[nameof(HostName)].ToString();
+            hostname = string.IsNullOrWhiteSpace(hostname) ? config[nameof(ResourceName)] : hostname;
             return new ExtendedRichDescription(
                 new RichDescription("Download ", new MaskHilite(config[nameof(Includes)], config[nameof(Excludes)])),
-                new RichDescription("from ", new Hilite(hostName))
+                new RichDescription("from ", new Hilite(hostname))
             );
         }
     }

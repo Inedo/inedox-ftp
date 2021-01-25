@@ -8,14 +8,16 @@ using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.SecureResources;
 using Inedo.Extensions.FTP.Credentials;
 using Inedo.Web;
+using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.FTP.Operations
 {
     [Tag("FTP")]
     [ScriptNamespace("FTP", PreferUnqualified = false)]
-    public abstract class FtpOperationBase : ExecuteOperation, IHasCredentials<FtpCredentials>
+    public abstract class FtpOperationBase : ExecuteOperation
     {
         public enum DataTransferMode
         {
@@ -31,30 +33,34 @@ namespace Inedo.Extensions.FTP.Operations
 
         private string serverPath = "/";
 
-        public abstract string CredentialName { get; set; }
+        [DisplayName("Credentials")]
+        [ScriptAlias("Credentials")]
+        [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
+        public string CredentialName { get; set; }
+
+        [DisplayName("FTP Resource")]
+        [ScriptAlias("ResourceName")]
+        [SuggestableValue(typeof(SecureResourceSuggestionProvider<FtpSecureResource>))]
+        public string ResourceName { get; set; }
 
         [DisplayName("FTP server")]
         [ScriptAlias("Host")]
-        [MappedCredential(nameof(FtpCredentials.HostName))]
         [Category("Authentication")]
         public string HostName { get; set; }
 
         [ScriptAlias("Port")]
-        [MappedCredential(nameof(FtpCredentials.Port))]
         [DefaultValue(21)]
         [Category("Authentication")]
         public int Port { get; set; } = 21;
 
         [DisplayName("Username")]
         [ScriptAlias("User")]
-        [MappedCredential(nameof(FtpCredentials.UserName))]
         [Category("Authentication")]
         public string UserName { get; set; }
 
         [DisplayName("Password")]
         [ScriptAlias("Password")]
         [FieldEditMode(FieldEditMode.Password)]
-        [MappedCredential(nameof(FtpCredentials.Password))]
         [Category("Authentication")]
         public SecureString Password { get; set; }
 
@@ -109,27 +115,72 @@ namespace Inedo.Extensions.FTP.Operations
         /// Creates an FTP client to connect to the remote server.
         /// </summary>
         /// <returns>FTP client object used to access the server.</returns>
-        internal FtpWebRequest CreateRequest(string path)
+        internal FtpWebRequest CreateRequest(UsernamePasswordCredentials credentials, FtpSecureResource resource, string path)
         {
-            if (string.IsNullOrEmpty(this.HostName))
-                throw new InvalidOperationException("FTP server not specified.");
-
-            var userName = AH.CoalesceString(this.UserName, "anonymous");
+            if (string.IsNullOrEmpty(resource?.HostName))
+                throw new InvalidOperationException("FTP server not specified.");            
 
             if (this.VerboseLogging)
             {
-                this.LogDebug($"Requesting \"{path}\" from {this.HostName} in {this.TransferMode} mode as user \"{userName}\"...");
+                this.LogDebug($"Requesting \"{path}\" from {resource?.HostName} in {this.TransferMode} mode as user \"{credentials?.UserName}\"...");
             }
 
-            var uri = new UriBuilder(Uri.UriSchemeFtp, this.HostName, this.Port, path).Uri;
+            var uri = new UriBuilder(Uri.UriSchemeFtp, resource.HostName, resource.Port, path).Uri;
 
             var ftp = (FtpWebRequest)WebRequest.Create(uri);
-            ftp.Credentials = new NetworkCredential(this.UserName, this.Password);
+            ftp.Credentials = new NetworkCredential(credentials?.UserName, credentials?.Password);
             ftp.KeepAlive = true;
             ftp.UseBinary = this.TransferMode == DataTransferMode.Binary;
             ftp.UsePassive = this.TransferBehavior == DataTransferBehavior.Passive;
 
             return ftp;
+        }
+
+        protected (UsernamePasswordCredentials, FtpSecureResource) GetCredentialsAndResource(ICredentialResolutionContext context)
+        {
+            if(context == null)
+                throw new InvalidOperationException("Credential resolution context is null.");
+
+            UsernamePasswordCredentials credentials; FtpSecureResource resource = null;
+            if(string.IsNullOrEmpty(this.CredentialName))
+            {
+                credentials = string.IsNullOrWhiteSpace(this.UserName) ? null : new UsernamePasswordCredentials();
+            }
+            else
+            {
+                credentials = (UsernamePasswordCredentials)SecureCredentials.TryCreate(this.CredentialName, context);
+                if(credentials == null)
+                {
+                    var rc = SecureCredentials.TryCreate(this.CredentialName, context) as FtpLegacyCredentials;
+                    resource = (FtpSecureResource)rc?.ToSecureResource();
+                    credentials = (UsernamePasswordCredentials)rc?.ToSecureCredentials();
+                }
+            }
+
+            if(resource == null && string.IsNullOrWhiteSpace(this.ResourceName))
+            {
+                resource = new FtpSecureResource();
+            }
+            else if(resource == null)
+            {
+                resource = (FtpSecureResource)SecureResource.TryCreate(this.ResourceName, context);
+            }
+
+            if(credentials != null)
+            {
+                credentials.UserName = AH.CoalesceString(this.UserName, credentials.UserName);
+                credentials.Password = this.Password ?? credentials.Password;
+                credentials.UserName = AH.CoalesceString(credentials.UserName, "anonymous");
+            }
+
+            if(resource != null)
+            {
+                resource.HostName = AH.CoalesceString(this.HostName, resource.HostName);
+                resource.Port = this.Port != 21 ? this.Port : resource.Port;
+                
+            }
+
+            return (credentials, resource);
         }
     }
 }

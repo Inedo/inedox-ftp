@@ -17,9 +17,6 @@ namespace Inedo.Extensions.FTP.Operations
     [ScriptAlias("Delete-Files")]
     public sealed class FtpDeleteOperation : FtpOperationBase
     {
-        [DisplayName("Credentials")]
-        [ScriptAlias("Credentials")]
-        public override string CredentialName { get; set; }
 
         private long progressTotal = 0;
         private long progressNow = 0;
@@ -32,7 +29,8 @@ namespace Inedo.Extensions.FTP.Operations
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             this.LogDebug("Retrieving remote file listing...");
-            var files = await this.CreateRequest(this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(path), this.UseCurrentDateOnDateParseError, context.CancellationToken).ConfigureAwait(false);
+            var (credentials, resource) = this.GetCredentialsAndResource(context as ICredentialResolutionContext);
+            var files = await this.CreateRequest(credentials, resource, this.ServerPath).GetDirectoryListingRecursiveAsync(path => this.CreateRequest(credentials, resource, path), this.UseCurrentDateOnDateParseError, context.CancellationToken).ConfigureAwait(false);
 
             var mask = new MaskingContext(this.Includes, this.Excludes);
             var matches = files.Where(f => mask.IsMatch(f.FullName.Substring(this.ServerPath.Length).Trim('\\', '/'))).ToList();
@@ -47,7 +45,7 @@ namespace Inedo.Extensions.FTP.Operations
             {
                 try
                 {
-                    var req = this.CreateRequest(file.FullName);
+                    var req = this.CreateRequest(credentials, resource, file.FullName);
                     req.Method = file is SlimFileInfo ? WebRequestMethods.Ftp.DeleteFile : WebRequestMethods.Ftp.RemoveDirectory;
                     (await req.GetResponseAsync(context.CancellationToken).ConfigureAwait(false))?.Dispose();
                     progressNow++;
@@ -68,11 +66,11 @@ namespace Inedo.Extensions.FTP.Operations
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
-            var credential = string.IsNullOrEmpty(config[nameof(CredentialName)]) ? null : ResourceCredentials.Create<FtpCredentials>(config[nameof(CredentialName)]);
-            var hostName = config[nameof(HostName)].ToString() ?? credential?.HostName;
+            var hostname = config[nameof(HostName)].ToString();
+            hostname = string.IsNullOrWhiteSpace(hostname) ? config[nameof(ResourceName)] : hostname;
             return new ExtendedRichDescription(
                 new RichDescription("Delete ", new MaskHilite(config[nameof(Includes)], config[nameof(Excludes)])),
-                new RichDescription("from ", new Hilite(hostName))
+                new RichDescription("from ", new Hilite(hostname))
             );
         }
     }
