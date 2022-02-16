@@ -110,7 +110,7 @@ namespace Inedo.Extensions.FTP.Operations
                 await sem.WaitAsync().ConfigureAwait(false);
                 tasks.Add(Task.Run(async () =>
                 {
-                    var path = file.FullName.Substring(this.ServerPath.Length).Trim('\\', '/').Replace('\\', '/');
+                    var path = file.FullName.Substring(this.LocalPath.Length).Trim('\\', '/').Replace('\\', '/');
 
                     try
                     {
