@@ -118,7 +118,7 @@ namespace Inedo.Extensions.FTP.Operations
         internal FtpWebRequest CreateRequest(UsernamePasswordCredentials credentials, FtpSecureResource resource, string path)
         {
             if (string.IsNullOrEmpty(resource?.HostName))
-                throw new InvalidOperationException("FTP server not specified.");            
+                throw new InvalidOperationException("FTP server not specified.");
 
             if (this.VerboseLogging)
             {
@@ -138,46 +138,40 @@ namespace Inedo.Extensions.FTP.Operations
 
         protected (UsernamePasswordCredentials, FtpSecureResource) GetCredentialsAndResource(ICredentialResolutionContext context)
         {
-            if(context == null)
+            if (context == null)
                 throw new InvalidOperationException("Credential resolution context is null.");
 
             UsernamePasswordCredentials credentials; FtpSecureResource resource = null;
-            if(string.IsNullOrEmpty(this.CredentialName))
+            if (string.IsNullOrEmpty(this.CredentialName))
             {
                 credentials = string.IsNullOrWhiteSpace(this.UserName) ? null : new UsernamePasswordCredentials();
             }
             else
             {
                 credentials = (UsernamePasswordCredentials)SecureCredentials.TryCreate(this.CredentialName, context);
-                if(credentials == null)
-                {
-                    var rc = SecureCredentials.TryCreate(this.CredentialName, context) as FtpLegacyCredentials;
-                    resource = (FtpSecureResource)rc?.ToSecureResource();
-                    credentials = (UsernamePasswordCredentials)rc?.ToSecureCredentials();
-                }
             }
 
-            if(resource == null && string.IsNullOrWhiteSpace(this.ResourceName))
+            if (resource == null && string.IsNullOrWhiteSpace(this.ResourceName))
             {
                 resource = new FtpSecureResource();
             }
-            else if(resource == null)
+            else if (resource == null)
             {
                 resource = (FtpSecureResource)SecureResource.TryCreate(this.ResourceName, context);
             }
 
-            if(credentials != null)
+            if (credentials != null)
             {
                 credentials.UserName = AH.CoalesceString(this.UserName, credentials.UserName);
                 credentials.Password = this.Password ?? credentials.Password;
                 credentials.UserName = AH.CoalesceString(credentials.UserName, "anonymous");
             }
 
-            if(resource != null)
+            if (resource != null)
             {
                 resource.HostName = AH.CoalesceString(this.HostName, resource.HostName);
                 resource.Port = this.Port != 21 ? this.Port : resource.Port;
-                
+
             }
 
             return (credentials, resource);

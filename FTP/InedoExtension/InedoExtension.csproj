@@ -2,20 +2,12 @@
   <PropertyGroup>
     <AssemblyName>FTP</AssemblyName>
     <RootNamespace>Inedo.Extensions.FTP</RootNamespace>
-    <TargetFrameworks>net452;net5.0</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-  <ItemGroup Condition="$(TargetFramework) == 'net452'">
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-  </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Inedo.SDK" Version="1.10.0" />
+    <PackageReference Include="Inedo.SDK" Version="2.0.0-ci.18" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TargetFramework) == 'net452'">
-    <Exec Command="powershell -Command &quot;if ((Test-Path C:\LocalDev\Tools\inedoxpack\inedoxpack.exe) -And (Test-Path C:\LocalDev\Otter\Extensions -PathType Container)) { C:\LocalDev\Tools\inedoxpack\inedoxpack.exe '$(TargetDir)..\$(TargetFileName)' 'C:\LocalDev\Otter\Extensions\$(TargetName).upack' 0.0.0 }&quot;" />
-  </Target>
 </Project>
