@@ -127,7 +127,9 @@ namespace Inedo.Extensions.FTP.Operations
 
             var uri = new UriBuilder(Uri.UriSchemeFtp, resource.HostName, resource.Port, path).Uri;
 
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
             var ftp = (FtpWebRequest)WebRequest.Create(uri);
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
             ftp.Credentials = new NetworkCredential(credentials?.UserName, credentials?.Password);
             ftp.KeepAlive = true;
             ftp.UseBinary = this.TransferMode == DataTransferMode.Binary;
@@ -157,7 +159,7 @@ namespace Inedo.Extensions.FTP.Operations
             }
             else if (resource == null)
             {
-                resource = (FtpSecureResource)SecureResource.TryCreate(this.ResourceName, context);
+                resource = (FtpSecureResource)SecureResource.TryCreate(SecureResourceType.General, this.ResourceName, context);
             }
 
             if (credentials != null)
